@@ -192,7 +192,7 @@ fun coeffs :: "exp \<Rightarrow> int list" where
 "coeffs (Add a b) = (factor a) # (coeffs b)"
 
 theorem "evalp (coeffs e) x = eval e x"
-  apply (induction e arbitrary : x rule : coeffs.induct)
+  apply (inductio n e arbitrary : x rule : coeffs.induct)
   apply (simp_all)
 
 end
