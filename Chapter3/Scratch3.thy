@@ -349,3 +349,94 @@ lemma "(pbval (nnf b) s = pbval b s)"
   apply (induction b rule:nnf.induct)
      apply(auto)
   done
+
+datatype instr = LOADI val | LOAD vname | ADD
+
+type_synonym stack = "val list"
+
+fun exec1 :: "instr \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack" where
+"exec1 (LOADI n) _ stk = n # stk"|
+"exec1 (LOAD v) s stk = (s v) # stk"|
+"exec1 ADD _ (j # i # stk) = (i + j) # stk"
+
+fun exec :: "instr list \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack" where
+"exec [] _ stk = stk"|
+"exec (i#is) s stk = exec is s (exec1 i s stk)"
+
+fun comp :: "aexp \<Rightarrow> instr list" where
+"comp (N n) = [LOADI n]"|
+"comp (V x) = [LOAD x]"|
+"comp (Plus e\<^sub>1 e\<^sub>2) = comp e\<^sub>1 @ comp e\<^sub>2 @ [ADD]"
+
+lemma instr_app_stack:"exec (is\<^sub>1 @ is\<^sub>2) s stk = exec is\<^sub>2 s (exec is\<^sub>1 s stk)"
+  apply (induction is\<^sub>1 arbitrary: stk)
+   apply (auto)
+  done
+
+lemma "exec (comp a) s stk = aval a s # stk"
+  apply (induction a arbitrary: stk)  
+  apply(auto)
+    apply (auto simp add: instr_app_stack)
+  done
+
+(* Exercise 3.10 *)
+fun exec1' :: "instr \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack option" where
+"exec1' (LOADI n) _ stk = Some (n # stk)"|
+"exec1' (LOAD v) s stk = Some ((s v) # stk)"|
+"exec1' ADD _ (j # i # stk) = Some ((i + j) # stk)"|
+"exec1' ADD _ _ = None"
+
+fun exec' :: "instr list \<Rightarrow> state \<Rightarrow> stack \<Rightarrow> stack option" where
+"exec' [] _ stk = Some stk"|
+"exec' (i#is) s stk = (case (exec1' i s stk) of
+                      None \<Rightarrow> None |
+                      Some stk' \<Rightarrow> exec' is s stk')"
+
+lemma instr_app_stack':"(exec' is\<^sub>1 s stk) = Some v \<Longrightarrow> exec' (is\<^sub>1 @ is\<^sub>2) s stk = exec' is\<^sub>2 s v"
+  apply (induction is\<^sub>1 arbitrary: stk)
+   apply (auto split:option.split)
+  done
+
+
+lemma "exec' (comp a) s stk = Some  (aval a s # stk)"
+  apply (induction a arbitrary: stk)
+    apply(auto simp add: instr_app_stack')
+  done
+
+type_synonym reg = nat
+
+(* (ADD r\<^sub>1 r\<^sub>2) adds value in r\<^sub>1 and value in r\<^sub>2 and puts result in r\<^sub>1 *)
+datatype rinstr = LDI int reg | LD vname reg | ADD reg reg
+
+fun rexec1:: "rinstr \<Rightarrow> state \<Rightarrow> (reg\<Rightarrow>int) \<Rightarrow> reg \<Rightarrow> int" where
+"rexec1 (LDI i r) st regs  = regs(r := i)"|
+"rexec1 (LD v r) st regs = regs(r := (st v))"|
+"rexec1 (ADD r\<^sub>1 r\<^sub>2) st regs = regs(r\<^sub>1 := ((regs r\<^sub>1) + (regs r\<^sub>2)))"
+
+fun rexec:: "rinstr list \<Rightarrow> state \<Rightarrow> (reg \<Rightarrow> int) \<Rightarrow> reg \<Rightarrow> int" where
+"rexec [] _ regs = regs"|
+"rexec (i#is) st regs = rexec is st (rexec1 i st regs)"
+
+fun rcomp :: "aexp \<Rightarrow> reg \<Rightarrow> rinstr list" where
+"rcomp (N n) r = [LDI n r]" |
+"rcomp (V x) r = [LD x r]" |
+"rcomp (Plus e\<^sub>1 e\<^sub>2) r = (rcomp e\<^sub>1 r) @ (rcomp e\<^sub>2 (r+1)) @ [ADD r (r+1)]"
+
+lemma rinstr_app_reg:"rexec (is\<^sub>1 @ is\<^sub>2) s r = rexec is\<^sub>2 s (rexec is\<^sub>1 s r)"
+  apply (induction is\<^sub>1 arbitrary: r)
+   apply (auto)
+  done
+
+lemma [simp]:"q > r \<Longrightarrow> (rexec (rcomp a1 q) s rs) r = rs r"
+  apply (induction a1 arbitrary: r rs q)
+    apply (auto simp add: rinstr_app_reg)
+  done
+
+
+lemma "rexec(rcomp a r) s rs r = aval a s"
+  apply (induction a arbitrary: rs r)
+  apply (auto)
+  apply (auto simp add: rinstr_app_reg )
+  done
+
+end
