@@ -20,13 +20,13 @@ fun app :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
 "app Nil ys = ys" |
 "app (Cons x xs) ys = Cons x (app xs ys)"
 
-fun rev :: "'a list \<Rightarrow> 'a list" where
-"rev Nil = Nil" |
-"rev (Cons x xs) = app (rev xs) (Cons x Nil)"
+fun rev' :: "'a list \<Rightarrow> 'a list" where
+"rev' Nil = Nil" |
+"rev' (Cons x xs) = app (rev' xs) (Cons x Nil)"
 
-value "rev(Cons True (Cons False Nil))"
+value "rev'(Cons True (Cons False Nil))"
 
-value "rev (Cons a (Cons b Nil))"
+value "rev' (Cons a (Cons b Nil))"
 
 lemma app_Nil2 [simp]: "app xs Nil = xs"
   apply (induction xs)
@@ -38,12 +38,12 @@ lemma app_assoc [simp]: "app (app xs ys) zs = app xs (app ys zs)"
   apply (auto)
   done
 
-lemma rev_app [simp]: "rev (app xs ys) = app (rev ys) (rev xs)"
+lemma rev_app [simp]: "rev' (app xs ys) = app (rev' ys) (rev' xs)"
   apply (induction xs)
    apply (auto)
   done
 
-theorem rev_rev [simp]: "rev (rev xs) = xs"
+theorem rev_rev [simp]: "rev' (rev' xs) = xs"
   apply (induction xs)
    apply(auto)
   done
@@ -93,6 +93,17 @@ lemma "div2(n) = n div 2"
     apply (auto)
   done
 
+fun itrev :: "'a list \<Rightarrow> 'a list \<Rightarrow> 'a list" where
+"itrev [] ys     = ys"|
+"itrev (x#xs) ys = itrev xs (x#ys)"
 
+lemma [simp]: "itrev xs ys = rev xs @ ys"
+  apply (induction xs arbitrary : ys)
+   apply (auto)
+  done
+
+lemma "itrev xs [] = rev xs"
+   apply (auto)
+  done
 
 end
