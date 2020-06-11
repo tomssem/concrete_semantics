@@ -147,7 +147,7 @@ definition explode_size :: "nat \<Rightarrow> tree0 \<Rightarrow> nat" where
 "explode_size n t = (2^n) * (1 + (nodes t)) - 1"
 
 lemma [simp] : "nodes (explode n (Node0 t t)) = 1 + 2 * nodes (explode n t)"
-  apply (induction n arbitrary : t)
+  apply (induction n arbitrary : t)ifexp=Bc2bool|If ifexp ifexp ifexp|Less2aexp aexp
   apply (auto)
   done
 
@@ -192,7 +192,7 @@ fun coeffs :: "exp \<Rightarrow> int list" where
 "coeffs (Add a b) = (factor a) # (coeffs b)"
 
 theorem "evalp (coeffs e) x = eval e x"
-  apply (inductio n e arbitrary : x rule : coeffs.induct)
+  apply (induction e arbitrary : x rule : coeffs.induct)
   apply (simp_all)
 
 end

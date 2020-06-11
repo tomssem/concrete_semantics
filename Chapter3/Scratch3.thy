@@ -403,6 +403,8 @@ lemma "exec' (comp a) s stk = Some  (aval a s # stk)"
     apply(auto simp add: instr_app_stack')
   done
 
+
+(* Exercise 3.11 *)
 type_synonym reg = nat
 
 (* (ADD r\<^sub>1 r\<^sub>2) adds value in r\<^sub>1 and value in r\<^sub>2 and puts result in r\<^sub>1 *)
